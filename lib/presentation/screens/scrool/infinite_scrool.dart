@@ -94,9 +94,7 @@ class _InfiniteScrollState extends State<InfiniteScroll> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Productos'),
-        // ✅ Se eliminó el IconButton de aquí
       ),
-      // ✅ FAB grande con ícono y texto "Agregar"
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _openForm,
         icon: const Icon(Icons.add, size: 28),
