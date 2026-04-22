@@ -14,22 +14,111 @@ class AuthNotifier extends ChangeNotifier {
 
   Session? _session;
   bool get isLoggedIn => _session != null;
+  String? get userEmail => _session?.user.email;
 
   Future<void> signIn(String email, String password) async {
-    await Supabase.instance.client.auth.signInWithPassword(
-      email: email,
-      password: password,
-    );
+    try {
+      await Supabase.instance.client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+    } on AuthApiException catch (e) {
+      throw Exception(_mapAuthError(e));
+    } catch (_) {
+      throw Exception(
+        'No se pudo conectar. Verifica tu internet e intenta de nuevo.',
+      );
+    }
   }
 
-  Future<void> signUp(String email, String password) async {
-    await Supabase.instance.client.auth.signUp(
-      email: email,
-      password: password,
-    );
+  Future<bool> signUp(String email, String password) async {
+    try {
+      final response = await Supabase.instance.client.auth.signUp(
+        email: email,
+        password: password,
+      );
+
+      final user = response.user;
+      if (user == null) {
+        throw Exception('No se pudo crear la cuenta. Intenta de nuevo.');
+      }
+
+      if (user.identities != null && user.identities!.isEmpty) {
+        throw Exception(
+          'Este correo ya está registrado. Intenta iniciar sesión.',
+        );
+      }
+
+      return response.session != null;
+    } on AuthApiException catch (e) {
+      throw Exception(_mapAuthError(e));
+    } catch (e) {
+      if (e is Exception) rethrow;
+      throw Exception(
+        'No se pudo conectar. Verifica tu internet e intenta de nuevo.',
+      );
+    }
+  }
+
+  Future<void> resendConfirmationEmail(String email) async {
+    try {
+      await Supabase.instance.client.auth.resend(
+        type: OtpType.signup,
+        email: email,
+      );
+    } on AuthApiException catch (e) {
+      throw Exception(_mapAuthError(e));
+    } catch (_) {
+      throw Exception(
+        'No se pudo reenviar el correo. Verifica tu internet e intenta de nuevo.',
+      );
+    }
   }
 
   Future<void> signOut() async {
-    await Supabase.instance.client.auth.signOut();
+    try {
+      await Supabase.instance.client.auth.signOut();
+    } catch (_) {
+      notifyListeners();
+    }
+  }
+
+  String _mapAuthError(AuthApiException e) {
+    final msg = e.message.toLowerCase();
+    final code = e.statusCode ?? '';
+
+    if (code == '429' ||
+        msg.contains('rate limit') ||
+        msg.contains('too many')) {
+      return 'Demasiados intentos. Espera unos minutos antes de volver a intentarlo.';
+    }
+    if (msg.contains('email not confirmed') || msg.contains('not confirmed')) {
+      return 'EMAIL_NOT_CONFIRMED';
+    }
+    if (msg.contains('invalid login') ||
+        msg.contains('invalid credentials') ||
+        msg.contains('invalid email or password')) {
+      return 'Correo o contraseña incorrectos.';
+    }
+    if (msg.contains('user not found')) {
+      return 'No existe una cuenta con este correo.';
+    }
+    if (msg.contains('user already registered') ||
+        msg.contains('already registered')) {
+      return 'Este correo ya está registrado. Intenta iniciar sesión.';
+    }
+    if (msg.contains('weak') && msg.contains('password')) {
+      return 'La contraseña es muy débil. Usa al menos 6 caracteres.';
+    }
+    if (msg.contains('signup') && msg.contains('disabled')) {
+      return 'El registro está deshabilitado temporalmente.';
+    }
+    if (msg.contains('network') ||
+        msg.contains('connection') ||
+        msg.contains('failed host')) {
+      return 'Error de conexión. Verifica tu internet.';
+    }
+
+    return 'Error: ${e.message}';
   }
 }

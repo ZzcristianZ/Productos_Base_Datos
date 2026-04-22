@@ -7,9 +7,11 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLow,
+      resizeToAvoidBottomInset: true, 
       appBar: AppBar(
         title: const Text('Segundo Parcial'),
         centerTitle: true,
@@ -30,75 +32,100 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
       body: SafeArea(
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(24),
-                ),
+        child: SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: screenHeight * 0.75, 
+            ),
+            child: IntrinsicHeight( 
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Icon(
-                      Icons.school_rounded,
-                      size: 48,
-                      color: colorScheme.onPrimaryContainer,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Segundo Parcial',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onPrimaryContainer,
+                    Container(
+                      padding: EdgeInsets.all(screenHeight * 0.025),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.school_rounded,
+                            size: screenHeight * 0.06,
+                            color: colorScheme.onPrimaryContainer,
+                          ),
+                          SizedBox(height: screenHeight * 0.012),
+                          Text(
+                            'Segundo Parcial',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: screenHeight * 0.032, 
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onPrimaryContainer,
+                            ),
+                          ),
+                          SizedBox(height: screenHeight * 0.007),
+                          Text(
+                            'Ingreso de Productos a base de datos',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: screenHeight * 0.017,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Ingreso de Productos a base de datos',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14),
+
+                    SizedBox(height: screenHeight * 0.035),
+
+                    _studentCard(
+                      colorScheme,
+                      screenHeight: screenHeight,
+                      name: 'Cristian Areniz Coronel',
+                      code: '192337',
                     ),
+                    SizedBox(height: screenHeight * 0.018),
+                    _studentCard(
+                      colorScheme,
+                      screenHeight: screenHeight,
+                      name: 'Andrés Guevara Contreras',
+                      code: '192413',
+                    ),
+
+                    SizedBox(height: screenHeight * 0.045),
+
+                    // --- Botón ---
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.inventory_2, size: 20),
+                      label: Padding(
+                        padding: EdgeInsets.symmetric(
+                          vertical: screenHeight * 0.018, 
+                        ),
+                        child: Text(
+                          'Ver Productos',
+                          style: TextStyle(fontSize: screenHeight * 0.02),
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: colorScheme.onPrimary,
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      onPressed: () => Navigator.pushNamed(context, '/productos'),
+                    ),
+
+                    SizedBox(height: screenHeight * 0.02),
                   ],
                 ),
               ),
-              const SizedBox(height: 28),
-              _studentCard(
-                colorScheme,
-                name: 'Cristian areniz Coronel',
-                code: '192337',
-              ),
-              const SizedBox(height: 14),
-              _studentCard(
-                colorScheme,
-                name: 'Andrés guevara contreras',
-                code: '192413',
-              ),
-              const SizedBox(height: 36),
-              ElevatedButton.icon(
-                icon: const Icon(Icons.inventory_2, size: 20),
-                label: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 14),
-                  child: Text('Ver Productos', style: TextStyle(fontSize: 16)),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colorScheme.primary,
-                  foregroundColor: colorScheme.onPrimary,
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                onPressed: () => Navigator.pushNamed(context, '/productos'),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -107,6 +134,7 @@ class HomeScreen extends StatelessWidget {
 
   Widget _studentCard(
     ColorScheme colors, {
+    required double screenHeight,
     required String name,
     required String code,
   }) {
@@ -118,16 +146,19 @@ class HomeScreen extends StatelessWidget {
         side: BorderSide(color: colors.outlineVariant, width: 1),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        padding: EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: screenHeight * 0.018,
+        ),
         child: Row(
           children: [
             CircleAvatar(
-              radius: 26,
+              radius: screenHeight * 0.032,
               backgroundColor: colors.secondaryContainer,
               child: Icon(
                 Icons.person,
                 color: colors.onSecondaryContainer,
-                size: 28,
+                size: screenHeight * 0.036,
               ),
             ),
             const SizedBox(width: 16),
@@ -137,16 +168,16 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   Text(
                     name,
-                    style: const TextStyle(
-                      fontSize: 17,
+                    style: TextStyle(
+                      fontSize: screenHeight * 0.021,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: screenHeight * 0.005),
                   Text(
                     'Código: $code',
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: screenHeight * 0.016,
                       color: colors.onSurfaceVariant,
                     ),
                   ),
