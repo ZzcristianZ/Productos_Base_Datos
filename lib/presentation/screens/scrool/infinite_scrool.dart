@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:segundoparcial/data/product_datasource.dart';
 import 'package:segundoparcial/domain/model/product_model.dart';
-import 'package:segundoparcial/domain/products_notifier.dart';
+import 'package:segundoparcial/domain/notifier/products_notifier.dart';
 
 class InfiniteScroll extends StatefulWidget {
   const InfiniteScroll({super.key});

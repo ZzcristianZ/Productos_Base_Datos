@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:segundoparcial/domain/notifier/auth_notifier.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -15,6 +16,18 @@ class HomeScreen extends StatelessWidget {
         backgroundColor: colorScheme.surfaceContainerLow,
         elevation: 0,
         scrolledUnderElevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Cerrar sesión',
+            onPressed: () async {
+              await AuthNotifier.instance.signOut();
+              if (context.mounted) {
+                Navigator.pushReplacementNamed(context, '/login');
+              }
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: Container(
@@ -48,7 +61,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Text(
+                    const Text(
                       'Ingreso de Productos a base de datos',
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 14),
@@ -63,7 +76,11 @@ class HomeScreen extends StatelessWidget {
                 code: '192337',
               ),
               const SizedBox(height: 14),
-              _studentCard(colorScheme, name: 'Andrés guevara contreras', code: '192413'),
+              _studentCard(
+                colorScheme,
+                name: 'Andrés guevara contreras',
+                code: '192413',
+              ),
               const SizedBox(height: 36),
               ElevatedButton.icon(
                 icon: const Icon(Icons.inventory_2, size: 20),

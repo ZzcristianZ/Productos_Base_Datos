@@ -11,9 +11,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter:
     sdk: flutter
-  go_router: ^17.2.0
   http: ^1.6.0
-  supabase_flutter: ^2.12.2
+  supabase_flutter: ^2.0.0
 
 dev_dependencies:
   flutter_lints: ^5.0.0
