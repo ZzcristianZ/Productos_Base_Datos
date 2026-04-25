@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:segundoparcial/domain/notifier/auth_notifier.dart';
+import 'package:segundoparcial/widgets/drawer_home.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -31,6 +32,7 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
+      drawer: DrawerHome(),
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const ClampingScrollPhysics(),
@@ -95,10 +97,7 @@ class HomeScreen extends StatelessWidget {
                       name: 'Andrés Guevara Contreras',
                       code: '192413',
                     ),
-
                     SizedBox(height: screenHeight * 0.045),
-
-                    // --- Botón ---
                     ElevatedButton.icon(
                       icon: const Icon(Icons.inventory_2, size: 20),
                       label: Padding(

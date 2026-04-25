@@ -10,19 +10,27 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailCtrl = TextEditingController();
-  final _passwordCtrl = TextEditingController();
-  final _confirmCtrl = TextEditingController();
-  bool _isLoading = false;
-  bool _obscurePassword = true;
-  bool _obscureConfirm = true;
+  final _nombreCtrl    = TextEditingController();
+  final _apellidoCtrl  = TextEditingController();
+  final _telefonoCtrl  = TextEditingController();
+  final _emailCtrl     = TextEditingController();
+  final _passwordCtrl  = TextEditingController();
+  final _confirmCtrl   = TextEditingController();
+
+  bool _isLoading        = false;
+  bool _obscurePassword  = true;
+  bool _obscureConfirm   = true;
+  DateTime? _fechaNacimiento;
 
   // Estado post-registro cuando se necesita confirmar email
-  bool _waitingForConfirmation = false;
-  String _registeredEmail = '';
+  bool   _waitingForConfirmation = false;
+  String _registeredEmail        = '';
 
   @override
   void dispose() {
+    _nombreCtrl.dispose();
+    _apellidoCtrl.dispose();
+    _telefonoCtrl.dispose();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     _confirmCtrl.dispose();
@@ -31,23 +39,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _onRegister() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_fechaNacimiento == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ Selecciona tu fecha de nacimiento'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
       final autoLoggedIn = await AuthNotifier.instance.signUp(
-        _emailCtrl.text.trim(),
-        _passwordCtrl.text.trim(),
+        email:            _emailCtrl.text.trim(),
+        password:         _passwordCtrl.text.trim(),
+        nombre:           _nombreCtrl.text.trim(),
+        apellido:         _apellidoCtrl.text.trim(),
+        telefono:         _telefonoCtrl.text.trim(),
+        fechaNacimiento:  _fechaNacimiento!.toIso8601String().split('T').first,
       );
 
       if (!mounted) return;
 
       if (autoLoggedIn) {
-        // Confirmación de email desactivada en Supabase → sesión activa
         Navigator.pushReplacementNamed(context, '/home');
       } else {
-        // Confirmación requerida → mostrar panel de ayuda
         setState(() {
-          _registeredEmail = _emailCtrl.text.trim();
+          _registeredEmail       = _emailCtrl.text.trim();
           _waitingForConfirmation = true;
         });
       }
@@ -91,9 +111,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   ButtonStyle get _buttonStyle => ElevatedButton.styleFrom(
-    minimumSize: const Size(double.infinity, 50),
-    padding: const EdgeInsets.symmetric(horizontal: 20),
-  );
+        minimumSize: const Size(double.infinity, 50),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -119,46 +139,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.mark_email_unread_rounded,
-                size: 80,
-                color: colorScheme.primary,
-              ),
+              Icon(Icons.mark_email_unread_rounded,
+                  size: 80, color: colorScheme.primary),
               const SizedBox(height: 24),
-              const Text(
-                '¡Cuenta creada!',
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
+              const Text('¡Cuenta creada!',
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center),
               const SizedBox(height: 12),
-              Text(
-                'Te enviamos un correo de confirmación a:',
-                style: TextStyle(color: colorScheme.onSurfaceVariant),
-                textAlign: TextAlign.center,
-              ),
+              Text('Te enviamos un correo de confirmación a:',
+                  style: TextStyle(color: colorScheme.onSurfaceVariant),
+                  textAlign: TextAlign.center),
               const SizedBox(height: 6),
-              Text(
-                _registeredEmail,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.primary,
-                  fontSize: 15,
-                ),
-                textAlign: TextAlign.center,
-              ),
+              Text(_registeredEmail,
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.primary,
+                      fontSize: 15),
+                  textAlign: TextAlign.center),
               const SizedBox(height: 16),
               Text(
                 'Haz clic en el enlace del correo y luego inicia sesión. '
                 'Revisa también la carpeta de spam.',
                 style: TextStyle(
-                  color: colorScheme.onSurfaceVariant,
-                  fontSize: 14,
-                ),
+                    color: colorScheme.onSurfaceVariant, fontSize: 14),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 36),
-
-              // Botón reenviar
               OutlinedButton.icon(
                 icon: const Icon(Icons.send_outlined),
                 label: _isLoading
@@ -170,12 +176,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     : const Text('Reenviar correo de confirmación'),
                 onPressed: _isLoading ? null : _resendConfirmation,
                 style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
-                ),
+                    minimumSize: const Size(double.infinity, 50)),
               ),
               const SizedBox(height: 16),
-
-              // Ir al login
               ElevatedButton(
                 style: _buttonStyle,
                 onPressed: () =>
@@ -211,101 +214,134 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 20),
-                    Icon(
-                      Icons.person_add_rounded,
-                      size: 56,
-                      color: colorScheme.primary,
-                    ),
+                    Icon(Icons.person_add_rounded,
+                        size: 56, color: colorScheme.primary),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Crear cuenta',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    const Text('Crear cuenta',
+                        style: TextStyle(
+                            fontSize: 28, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Completa los datos para registrarte',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                    const SizedBox(height: 32),
+                    const Text('Completa tus datos para registrarte',
+                        style: TextStyle(color: Colors.grey)),
+                    const SizedBox(height: 28),
 
-                    // ── Correo ──────────────────────────────────────────────
-                    TextFormField(
-                      controller: _emailCtrl,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'Correo',
-                        prefixIcon: Icon(Icons.email_outlined),
+                    // ── Nombre ───────────────────────────────────────────
+                    _field(_nombreCtrl, 'Nombre', Icons.badge_outlined),
+
+                    // ── Apellido ─────────────────────────────────────────
+                    _field(_apellidoCtrl, 'Apellido', Icons.badge_outlined),
+
+                    // ── Teléfono ─────────────────────────────────────────
+                    _field(
+                      _telefonoCtrl,
+                      'Teléfono',
+                      Icons.phone_outlined,
+                      type: TextInputType.phone,
+                    ),
+
+                    // ── Fecha de nacimiento ──────────────────────────────
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Card(
+                        child: ListTile(
+                          leading: Icon(Icons.cake_outlined,
+                              color: colorScheme.primary),
+                          title: Text(
+                            _fechaNacimiento == null
+                                ? 'Fecha de nacimiento'
+                                : _fechaNacimiento!
+                                    .toIso8601String()
+                                    .split('T')
+                                    .first,
+                            style: TextStyle(
+                              color: _fechaNacimiento == null
+                                  ? colorScheme.onSurfaceVariant
+                                  : colorScheme.onSurface,
+                            ),
+                          ),
+                          onTap: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: DateTime(2000),
+                              firstDate: DateTime(1920),
+                              lastDate: DateTime.now(),
+                            );
+                            if (picked != null) {
+                              setState(() => _fechaNacimiento = picked);
+                            }
+                          },
+                        ),
                       ),
+                    ),
+
+                    // ── Correo ───────────────────────────────────────────
+                    _field(
+                      _emailCtrl,
+                      'Correo',
+                      Icons.email_outlined,
+                      type: TextInputType.emailAddress,
                       validator: (v) {
-                        if (v == null || v.trim().isEmpty) {
-                          return 'El correo es obligatorio';
-                        }
+                        if (v == null || v.trim().isEmpty) return 'Requerido';
                         if (!v.contains('@') || !v.contains('.')) {
                           return 'Correo inválido';
                         }
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
 
-                    // ── Contraseña ──────────────────────────────────────────
-                    TextFormField(
-                      controller: _passwordCtrl,
-                      obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                        labelText: 'Contraseña',
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
+                    // ── Contraseña ───────────────────────────────────────
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: TextFormField(
+                        controller: _passwordCtrl,
+                        obscureText: _obscurePassword,
+                        decoration: InputDecoration(
+                          labelText: 'Contraseña',
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          suffixIcon: IconButton(
+                            icon: Icon(_obscurePassword
                                 ? Icons.visibility
-                                : Icons.visibility_off,
-                          ),
-                          onPressed: () => setState(
-                            () => _obscurePassword = !_obscurePassword,
+                                : Icons.visibility_off),
+                            onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword),
                           ),
                         ),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'Requerido';
+                          if (v.length < 6) return 'Mínimo 6 caracteres';
+                          return null;
+                        },
                       ),
-                      validator: (v) {
-                        if (v == null || v.isEmpty) return 'Requerido';
-                        if (v.length < 6) return 'Mínimo 6 caracteres';
-                        return null;
-                      },
                     ),
-                    const SizedBox(height: 16),
 
-                    // ── Confirmar contraseña ────────────────────────────────
-                    TextFormField(
-                      controller: _confirmCtrl,
-                      obscureText: _obscureConfirm,
-                      decoration: InputDecoration(
-                        labelText: 'Confirmar contraseña',
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscureConfirm
+                    // ── Confirmar contraseña ─────────────────────────────
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 32),
+                      child: TextFormField(
+                        controller: _confirmCtrl,
+                        obscureText: _obscureConfirm,
+                        decoration: InputDecoration(
+                          labelText: 'Confirmar contraseña',
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          suffixIcon: IconButton(
+                            icon: Icon(_obscureConfirm
                                 ? Icons.visibility
-                                : Icons.visibility_off,
-                          ),
-                          onPressed: () => setState(
-                            () => _obscureConfirm = !_obscureConfirm,
+                                : Icons.visibility_off),
+                            onPressed: () => setState(
+                                () => _obscureConfirm = !_obscureConfirm),
                           ),
                         ),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'Requerido';
+                          if (v != _passwordCtrl.text) {
+                            return 'Las contraseñas no coinciden';
+                          }
+                          return null;
+                        },
                       ),
-                      validator: (v) {
-                        if (v == null || v.isEmpty) return 'Requerido';
-                        if (v != _passwordCtrl.text) {
-                          return 'Las contraseñas no coinciden';
-                        }
-                        return null;
-                      },
                     ),
-                    const SizedBox(height: 32),
 
-                    // ── Botón crear cuenta ──────────────────────────────────
+                    // ── Botón ────────────────────────────────────────────
                     ElevatedButton(
                       style: _buttonStyle,
                       onPressed: _isLoading ? null : _onRegister,
@@ -314,25 +350,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               width: 22,
                               height: 22,
                               child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2.5,
-                              ),
+                                  color: Colors.white, strokeWidth: 2.5),
                             )
-                          : const Text(
-                              'Crear cuenta',
-                              style: TextStyle(fontSize: 16),
-                            ),
+                          : const Text('Crear cuenta',
+                              style: TextStyle(fontSize: 16)),
                     ),
                     const SizedBox(height: 20),
-
                     Center(
                       child: TextButton(
                         onPressed: _isLoading
                             ? null
                             : () => Navigator.pushReplacementNamed(
-                                context,
-                                '/login',
-                              ),
+                                context, '/login'),
                         child: const Text('¿Ya tienes cuenta? Inicia sesión'),
                       ),
                     ),
@@ -346,4 +375,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     );
   }
+
+  Widget _field(
+    TextEditingController ctrl,
+    String label,
+    IconData icon, {
+    TextInputType type = TextInputType.text,
+    String? Function(String?)? validator,
+  }) =>
+      Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: TextFormField(
+          controller: ctrl,
+          keyboardType: type,
+          decoration: InputDecoration(
+            labelText: label,
+            prefixIcon: Icon(icon),
+          ),
+          validator: validator ??
+              (v) => (v == null || v.trim().isEmpty) ? 'Requerido' : null,
+        ),
+      );
 }
