@@ -13,6 +13,7 @@ void main() async {
     url: ApiConstants.supabaseUrl,
     anonKey: ApiConstants.anonKey,
   );
+
   AuthNotifier.instance;
 
   runApp(const MyApp());
@@ -32,12 +33,13 @@ class MyApp extends StatelessWidget {
           theme: AppTheme(selectedColor: 4).getTheme(),
           initialRoute: '/',
           routes: {
-            '/':           (context) => const _AuthGate(),
-            '/login':      (context) => const LoginScreen(),
-            '/register':   (context) => const RegisterScreen(),
-            '/home':       (context) => const HomeScreen(),
-            '/productos':  (context) => const InfiniteScroll(),
-            '/formulario': (context) => const Formulario(),
+            '/': (context) => const _AuthGate(),
+
+            '/login':    (context) => const LoginScreen(),
+            '/register': (context) => const RegisterScreen(),
+            '/home':       (context) => const  _RouteGuard(child: HomeScreen()),
+            '/productos':  (context) => const _RouteGuard(child: InfiniteScroll()),
+            '/formulario': (context) => const _RouteGuard(child: Formulario()),
           },
         );
       },
@@ -71,5 +73,49 @@ class _AuthGateState extends State<_AuthGate> {
     return const Scaffold(
       body: Center(child: CircularProgressIndicator()),
     );
+  }
+}
+
+class _RouteGuard extends StatefulWidget {
+  const _RouteGuard({required this.child});
+  final Widget child;
+
+  @override
+  State<_RouteGuard> createState() => _RouteGuardState();
+}
+
+class _RouteGuardState extends State<_RouteGuard> {
+  @override
+  void initState() {
+    super.initState();
+    AuthNotifier.instance.addListener(_checkAuth);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkAuth());
+  }
+
+  @override
+  void dispose() {
+    AuthNotifier.instance.removeListener(_checkAuth);
+    super.dispose();
+  }
+
+  void _checkAuth() {
+    if (!mounted) return;
+    if (!AuthNotifier.instance.isLoggedIn) {
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/login',
+        (route) => false, 
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!AuthNotifier.instance.isLoggedIn) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    return widget.child;
   }
 }
